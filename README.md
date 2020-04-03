@@ -11,7 +11,7 @@ There are two columns in each of these text data files. The first column is the 
 
 In each file are multiple simulation outputs, concatenated, at increasing levels of inhibition (g_I). The first simulation is at g_I=1, and subsequent simulations then increase in steps of 4, i.e. g_I={1, 5, 9, ... }. 
 
-New simulations can be determined by the fact that the spike time (first column) decreases. Simulation time length is 400 seconds.
+New simulations can be determined by the fact that the spike time (first column) decreases. Simulation time length is 212 seconds.
 
 Code files.
 
