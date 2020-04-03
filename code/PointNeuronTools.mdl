@@ -1,0 +1,25 @@
+#ifndef POINTNEURONTOOLS_MDL
+#define POINTNEURONTOOLS_MDL
+
+Interface OutputProducer {
+  double* output;
+}
+
+Interface SpikeProducer {
+  bool* spike;
+}
+
+Interface DataFeed {
+  double * x1;
+  double * x2;
+  double * x3;
+}
+
+Struct Input {
+  double* input;
+  double weight;
+  int row;
+  int col;
+}
+
+#endif

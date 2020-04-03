@@ -1,0 +1,65 @@
+#ifndef MAHONUNIT_MDL
+#define MAHONUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node MahonUnit Implements OutputProducer, SpikeProducer, DataFeed
+{
+
+  double g_out;
+  double var1, var2, var3;
+  Input [] MSNNetInps;
+  double V_init, g_init;
+  double * drivinp;	
+  bool spike;
+  double injCur;
+  long connectionSeed;
+  double synb;
+
+
+  Shared {
+    double spikethresh;
+    double deltaT;
+  }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double connectionProb;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update1();
+   RuntimePhase update2();
+   RuntimePhase update3();
+   RuntimePhase update4();
+
+   RuntimePhase flushVars1(g_out);
+   RuntimePhase flushVars2(g_out);
+   RuntimePhase flushVars3(g_out);
+   RuntimePhase flushVars4(g_out);
+   RuntimePhase updateOutputs(spike,var1,var2,var3);
+   PredicateFunction ConnectP1;
+
+   DataFeed.x1 << &var1;
+   DataFeed.x2 << &var2;
+   DataFeed.x3 << &var3;
+ 
+   OutputProducer.output << &g_out;
+   SpikeProducer.spike << &spike;
+
+   UserFunction setIndices;   
+
+   Connection Pre Node ((ConnectP1()) && (PSet.identifier == "MSN")) Expects OutputProducer {
+     OutputProducer.output >> MSNNetInps.input;
+     PSet.weight >> MSNNetInps.weight;
+     setIndices();
+   }
+
+   Connection Pre Node (PSet.identifier == "SWITCHINP") Expects OutputProducer {
+     OutputProducer.output >> drivinp;
+   }
+
+}
+
+#endif

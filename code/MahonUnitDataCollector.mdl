@@ -1,0 +1,38 @@
+#ifndef MAHONUNITDATACOLLECTOR_MDL
+#define MAHONUNITDATACOLLECTOR_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "MahonUnit.mdl"
+
+Variable MahonUnitDataCollector
+{
+   string fileName;
+   int [] rows;
+   int [] cols;
+   int mxcol;
+   double* [] x1;
+   double* [] x2;
+   double* [] x3;
+   bool* [] spikes;   
+   double deltaT;
+   int maxoutnum;
+   
+
+   UserFunction getNodeIndices;
+
+   Connection Pre Node () Expects SpikeProducer, DataFeed
+   {
+     DataFeed.x1 >> x1;
+     DataFeed.x2 >> x2;
+     DataFeed.x3 >> x3;
+     SpikeProducer.spike >> spikes;
+     getNodeIndices();
+   }
+ 
+
+
+   InitPhase initialize;
+   TriggeredFunction dataCollection, dataCollectionSpike, dataCollectionLFP;
+   FinalPhase finalize;
+}
+
+#endif

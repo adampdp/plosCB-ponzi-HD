@@ -1,0 +1,89 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, updateInputState, update, flushVars1, update1, flushVars2, update2, flushVars3, update3, flushVars4, update4, updateOutputs, lastPhase };
+
+
+FinalPhases = { finalize };
+
+#define INJCUR 0 
+NodeType MahonUnit(<deltaT = DELTATSIMXX, spikethresh = 0.0, vk = VKXX, vkir = VKIRXX, vkrp = VKRPXX >);
+
+
+
+NodeType FileInput(<deltaTinp = DELTATINPXX, deltaTsim = DELTATSIMXX, inputbuffersize =INPBUFSZXX, initoffset = INPBUFOFFXX,
+                   fileName1 = "/home/adam/work/makebinR62cortWT/redo/inpfileall1.bindxt">);	
+
+
+BindName initS("inpbase",  UniformDist(INPBASELOWXX,INPBASEHIXX), "inprange", UniformDist(INPRANGELOWXX,INPRANGEHIXX));
+
+
+NdplNodeInit heterS(initS);
+BindName INPW("identifier", "SWITCHINP");
+NdplInAttrInit inpW(INPW);
+
+BindName initN("V_init", UniformDist(-75, -80), "g_init", 0.0, "injCur", 0.0, 
+	       "connectionSeed",  UniformDist(0, 10000000), "synb", UniformDist(SYNBLOXX,SYNBHIXX));
+NdplNodeInit heterN(initN);
+BindName IN("weight", Neg(UniformDist(WEILOXX,WEIHIXX)),
+	    "identifier", "MSN",
+	    "connectionProb", CONPROBXX);
+	  
+
+NdplInAttrInit lateral(IN);
+
+
+
+Grid IAF
+{
+   Dimension(SIZEXX,SIZEXX);
+   Layer(nodes, MahonUnit, UniformLayout(1), < nodekind="Nodes" >);
+   Layer(inps, FileInput, UniformLayout(1), < nodekind="Nodes" >);
+
+
+   InitNodes( .[].Layer(nodes), heterN);
+   InitNodes( .[].Layer(inps), heterS);
+
+   connectNodeSets(.[].Layer(nodes), .[].Layer(nodes), 
+		   Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+
+   connectNodeSets(.[].Layer(inps), .[].Layer(nodes), 
+		   IsoSampler(), outAttrDef, inpW);
+
+};
+
+IAF iaf;
+
+VariableType MahonUnitDataCollector;
+MahonUnitDataCollector collector<fileName="Output.dat", deltaT = DELTATSIMXX, maxoutnum = 0>;
+
+polyConnect(iaf[].Layer(nodes), collector, <>, <>);
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==",  TLENXX, 0, lastPhase); 
+
+collector.dataCollectionSpike() on iterTrig;
+
+
+Stop on endTrig;
+
